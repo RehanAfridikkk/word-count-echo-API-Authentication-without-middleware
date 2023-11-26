@@ -6,18 +6,14 @@ import (
 	"database/sql"
 	"log"
 
+	"github.com/RehanAfridikkk/API-Authentication/structure"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // User represents a user model.
-type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
 
 // CreateUser creates a new user.
-func CreateUser(db *sql.DB, user *User) error {
+func CreateUser(db *sql.DB, user *structure.User) error {
 	// Hash the user's password before storing it in the database
 	hashedPassword, err := hashPassword(user.Password)
 	if err != nil {
