@@ -1,13 +1,10 @@
 package pkg
 
-type CountsResult struct {
-	LineCount        int
-	WordsCount       int
-	VowelsCount      int
-	PunctuationCount int
-}
+import (
+	"github.com/RehanAfridikkk/API-Authentication/structure"
+)
 
-func Counts(chunk []byte, results chan<- CountsResult) {
+func Counts(chunk []byte, results chan<- structure.CountsResult) {
 	lineCount := 0
 	wordsCount := 0
 	vowelsCount := 0
@@ -41,7 +38,7 @@ func Counts(chunk []byte, results chan<- CountsResult) {
 		wordsCount++
 	}
 
-	results <- CountsResult{LineCount: lineCount, WordsCount: wordsCount, VowelsCount: vowelsCount, PunctuationCount: punctuationCount}
+	results <- structure.CountsResult{LineCount: lineCount, WordsCount: wordsCount, VowelsCount: vowelsCount, PunctuationCount: punctuationCount}
 }
 
 func isVowel(b byte) bool {

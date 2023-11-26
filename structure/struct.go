@@ -1,9 +1,8 @@
 package structure
 
-
-
 import (
 	"mime/multipart"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -16,4 +15,11 @@ type JwtCustomClaims struct {
 type Message struct {
 	Upload   multipart.File `form:"upload"`
 	Routines int            `form:"routines"`
+}
+
+type CountsResult struct {
+	LineCount        int
+	WordsCount       int
+	VowelsCount      int
+	PunctuationCount int
 }
