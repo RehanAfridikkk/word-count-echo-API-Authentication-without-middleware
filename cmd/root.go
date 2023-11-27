@@ -7,22 +7,23 @@ import (
 	"mime/multipart"
 	"time"
 
-	"github.com/RehanAfridikkk/word-count-Echo-API-fileupload/pkg"
+	"github.com/RehanAfridikkk/API-Authentication/pkg"
+	"github.com/RehanAfridikkk/API-Authentication/structure"
 )
 
-func ProcessFile(file multipart.File, routines int) (pkg.CountsResult, int, time.Duration, error) {
+func ProcessFile(file multipart.File, routines int) (structure.CountsResult, int, time.Duration, error) {
 	start := time.Now()
 
 	var buf bytes.Buffer
 	_, err := io.Copy(&buf, file)
 	if err != nil {
-		return pkg.CountsResult{}, 0, 0, err
+		return structure.CountsResult{}, 0, 0, err
 	}
 
 	fileContent := buf.Bytes()
 
 	chunkSize := len(fileContent) / routines
-	results := make(chan pkg.CountsResult, routines)
+	results := make(chan structure.CountsResult, routines)
 
 	for i := 0; i < routines; i++ {
 		startIndex := i * chunkSize
@@ -35,7 +36,7 @@ func ProcessFile(file multipart.File, routines int) (pkg.CountsResult, int, time
 		go pkg.Counts(chunk, results)
 	}
 
-	totalCounts := pkg.CountsResult{}
+	totalCounts := structure.CountsResult{}
 
 	for i := 0; i < routines; i++ {
 		result := <-results

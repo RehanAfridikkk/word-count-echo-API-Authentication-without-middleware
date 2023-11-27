@@ -12,9 +12,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-var db *sql.DB // Declare a variable to hold the database connection
+var db *sql.DB
 
-// SetDB sets the db variable from the main package
 func SetDB(database *sql.DB) {
 	db = database
 }
@@ -56,22 +55,17 @@ func Signup(c echo.Context) error {
 	if user.Role == "admin" {
 		isAdminAllowed := checkAdminPermission(db, user.Username)
 		if !isAdminAllowed {
-			// You might want to roll back the signup or handle it accordingly
 			return echo.NewHTTPError(http.StatusUnauthorized, "Admin signup not allowed")
 		}
 
-		// Perform additional tasks for admin signup
-		// For example, grant admin privileges or notify the owner for approval
 		adminSignupTasks(db, user.Username)
 	}
 
-	// Do not include the password in the response
 	user.Password = ""
 
 	return c.JSON(http.StatusCreated, user)
 }
 
-// validateUser performs basic validation on the user input
 func validateUser(user *structure.User) error {
 
 	if user.Username == "" {
@@ -80,17 +74,11 @@ func validateUser(user *structure.User) error {
 	if len(user.Password) < 6 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Password must be at least 6 characters")
 	}
-	// You can add more validation rules based on your requirements
-	// For example, check if the username is unique, etc.
-	// ...
 
 	return nil
 }
 
-// adminSignupTasks performs additional tasks for admin signup.
 func adminSignupTasks(db *sql.DB, username string) {
-	// Grant admin-specific privileges
-	// For example, update the user record to indicate admin privileges.
 
 	_, err := db.Exec("UPDATE users SET is_admin = true WHERE username = $1", username)
 	if err != nil {
@@ -101,19 +89,12 @@ func adminSignupTasks(db *sql.DB, username string) {
 	log.Println("Admin privileges granted for user:", username)
 }
 
-// checkAdminPermission checks if a user is allowed to sign up as an admin.
 func checkAdminPermission(db *sql.DB, username string) bool {
-	// Implement your logic to check if the user is allowed to sign up as an admin.
-	// This could involve querying the database for specific criteria or permissions.
 
-	// For example, check if the user is the owner of the database.
-	// You might have a table or a field in the users table that indicates ownership.
-
-	// Placeholder logic:
 	var role string
 	err := db.QueryRow("SELECT role FROM users WHERE id = $1", username).Scan(&role)
 	if err == sql.ErrNoRows {
-		// No rows returned, meaning the user does not exist.
+
 		log.Println("User not found")
 		return false
 	} else if err != nil {
@@ -121,6 +102,5 @@ func checkAdminPermission(db *sql.DB, username string) bool {
 		return false
 	}
 
-	// Check if the user has an "admin" roled
 	return role == "admin"
 }

@@ -5,14 +5,20 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/RehanAfridikkk/API-Authentication/cmd"
+	"github.com/RehanAfridikkk/API-Authentication/structure"
+
+	// "github.com/RehanAfridikkk/word-count-Echo-API/pkg"
+	// "github.com/RehanAfridikkk/word-count-Echo-API/pkg"
+	// "github.com/RehanAfridikkk/word-count-Echo-API/pkg"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
 func Upload(c echo.Context) error {
-	fmt.Println("line4")
+
 	authHeader := c.Request().Header.Get("Authorization")
 
 	if authHeader == "" {
@@ -34,11 +40,6 @@ func Upload(c echo.Context) error {
 	fmt.Println("ERROR: ", err)
 	if err != nil {
 		return err
-	}
-	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
-		username := claims["name"].(string)
-		fmt.Println(username)
-
 	}
 
 	file, err := c.FormFile("file")
@@ -70,6 +71,19 @@ func Upload(c echo.Context) error {
 		})
 	}
 
+	if claims, ok := parsedToken.Claims.(jwt.MapClaims); ok && parsedToken.Valid {
+		username := claims["name"].(string)
+		fmt.Println(username)
+
+		// Store the upload request information in the database
+		err := storeUploadRequest(username, file.Filename, routines, totalCounts, runTime)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, echo.Map{
+				"error": "Failed to store upload request information",
+			})
+		}
+	}
+
 	return c.JSON(http.StatusOK, echo.Map{
 		"lineCount":        totalCounts.LineCount,
 		"wordsCount":       totalCounts.WordsCount,
@@ -77,5 +91,13 @@ func Upload(c echo.Context) error {
 		"punctuationCount": totalCounts.PunctuationCount,
 		"runTime":          runTime.String(),
 	})
+}
 
+func storeUploadRequest(username, fileName string, routines int, totalCounts structure.CountsResult, runTime time.Duration) error {
+	_, err := db.Exec(`
+
+        INSERT INTO upload_requests (username, file_name, routines, line_count, words_count, vowels_count, punctuation_count, run_time)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `, username, fileName, routines, totalCounts.LineCount, totalCounts.WordsCount, totalCounts.VowelsCount, totalCounts.PunctuationCount, runTime)
+	return err
 }

@@ -1,7 +1,9 @@
 package structure
 
 import (
+	"math/big"
 	"mime/multipart"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -24,8 +26,6 @@ type CountsResult struct {
 	PunctuationCount int
 }
 
-// structure/user.go
-
 type LoginRequest struct {
 	Username string `json:"username" form:"username" query:"username"`
 	Password string `json:"password" form:"password" query:"password"`
@@ -36,4 +36,9 @@ type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Role     string `json:"role"`
+}
+
+type StatisticsResult struct {
+	ExecutionCount big.Int       `json:"execution_count"`
+	AverageRuntime time.Duration `json:"average_runtime"`
 }
