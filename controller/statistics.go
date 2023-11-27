@@ -12,19 +12,24 @@ import (
 )
 
 type StatisticsResult struct {
-	ExecutionCount big.Int       `json:"execution_count"`
-	AverageRuntime time.Duration `json:"average_runtime"`
+	ExecutionCount big.Int      `json:"execution_count"`
+	AverageRuntime JSONDuration `json:"average_runtime"`
 }
 
-// Statistics handles the statistics endpoint.
+type JSONDuration struct {
+	time.Duration
+}
+
+func (jd JSONDuration) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%s"`, jd.String())), nil
+}
+
 func Statistics(c echo.Context) error {
-	// Extract the token string from the Authorization header
 	authHeader := c.Request().Header.Get("Authorization")
 	if authHeader == "" {
 		return c.JSON(http.StatusUnauthorized, echo.Map{"error": "Token is missing"})
 	}
 
-	// Split the token string to get the actual token
 	tok := strings.Split(authHeader, " ")
 	if len(tok) != 2 {
 		return c.JSON(http.StatusUnauthorized, echo.Map{"error": "Invalid token format"})
@@ -32,13 +37,11 @@ func Statistics(c echo.Context) error {
 
 	tokenString := tok[1]
 
-	// Validate the token and extract user information
 	username, err := Validate(tokenString)
 	if err != nil {
 		return handleTokenError(c, err)
 	}
 
-	// Get file name from the request
 	fileName := c.QueryParam("file")
 	if fileName == "" {
 		return c.JSON(http.StatusBadRequest, echo.Map{
@@ -108,12 +111,8 @@ func Validate(tokenString string) (string, error) {
 	}
 }
 
-// queryStatistics queries the database for statistics.
 func queryStatistics(username, fileName string) (StatisticsResult, error) {
-	// Perform a database query to retrieve execution count and average runtime
-	// for the given username and file name from the upload_requests table
 
-	// Replace the following with your actual database query
 	fmt.Println(username, fileName)
 	row := db.QueryRow(`
 	SELECT COUNT(*) AS execution_count, AVG(run_time) AS average_runtime FROM upload_requests WHERE username = $1 AND file_name = $2
@@ -124,7 +123,8 @@ func queryStatistics(username, fileName string) (StatisticsResult, error) {
 
 	err := row.Scan(&executionCount, &averageRuntimeSeconds)
 	if err != nil {
-		// Handle the error (e.g., user not found, database error)
+
+		fmt.Println(StatisticsResult{})
 		return StatisticsResult{}, echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve statistics from the database")
 	}
 
@@ -132,6 +132,6 @@ func queryStatistics(username, fileName string) (StatisticsResult, error) {
 
 	return StatisticsResult{
 		ExecutionCount: executionCount,
-		AverageRuntime: averageRuntime,
+		AverageRuntime: JSONDuration{Duration: averageRuntime},
 	}, nil
 }

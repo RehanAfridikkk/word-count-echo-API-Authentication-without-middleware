@@ -75,7 +75,6 @@ func Upload(c echo.Context) error {
 		username := claims["name"].(string)
 		fmt.Println(username)
 
-		// Store the upload request information in the database
 		err := storeUploadRequest(username, file.Filename, routines, totalCounts, runTime)
 		if err != nil {
 			return c.JSON(http.StatusInternalServerError, echo.Map{

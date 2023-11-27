@@ -15,7 +15,7 @@ func main() {
 	e.GET("/", controller.Accessible)
 	e.POST("/upload", controller.Upload)
 	e.POST("/signup", controller.Signup)
-	e.POST("/process", controller.Process)
+	e.POST("/processes", controller.Processes)
 	e.GET("/statistics", controller.Statistics)
 
 	db, err := models.OpenDB()
