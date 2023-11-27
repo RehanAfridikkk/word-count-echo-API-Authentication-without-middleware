@@ -10,8 +10,13 @@ import (
 )
 
 type UploadRequest struct {
-	ID      string `json:"ID"`
-	RunTime string `json:"runtime"`
+	ID               string `json:"ID"`
+	RunTime          string `json:"runtime"`
+	WordCount        int    `json:"wordCount"`
+	VowelsCount      int    `json:"vowelsCount"`
+	PunctuationCount int    `json:"punctuationCount"`
+	Routines         int    `json:"routines"`
+	LineCount        int    `json:"lineCount"`
 }
 
 func Processes(c echo.Context) error {
@@ -45,7 +50,7 @@ func QueryProcesses(username string) interface{} {
 
 	fmt.Println(username)
 	rows, err := db.Query(`
-        SELECT id, run_time FROM upload_requests WHERE username = $1
+        SELECT id, run_time, words_count, vowels_count, punctuation_count, routines, line_count FROM upload_requests WHERE username = $1
     `, username)
 	if err != nil {
 		// Handle the error
@@ -58,7 +63,7 @@ func QueryProcesses(username string) interface{} {
 		// Create a new instance of the struct for each row
 		var uploadRequest UploadRequest
 
-		if err := rows.Scan(&uploadRequest.ID, &uploadRequest.RunTime); err != nil {
+		if err := rows.Scan(&uploadRequest.ID, &uploadRequest.RunTime, &uploadRequest.WordCount, &uploadRequest.VowelsCount, &uploadRequest.PunctuationCount, &uploadRequest.Routines, &uploadRequest.LineCount); err != nil {
 			// Handle the scan error
 			log.Fatal(err)
 			return nil
