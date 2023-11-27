@@ -33,14 +33,14 @@ func Login(c echo.Context) error {
 	log.Println("Login request:", loginRequest)
 
 	// Validate the username and password against the database
-	user, err := models.GetUserByID(db, loginRequest.UserID)
+	user, err := models.GetUserByusername(db, loginRequest.Username)
 	if err != nil {
 		log.Println("Error checking credentials:", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error checking credentials")
 	}
 
 	if user == nil {
-		log.Println("User not found for ID:", loginRequest.UserID)
+		log.Println("User not found for ID:", loginRequest.Username)
 		return echo.ErrUnauthorized
 	}
 

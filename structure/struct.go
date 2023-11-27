@@ -29,11 +29,10 @@ type CountsResult struct {
 type LoginRequest struct {
 	Username string `json:"username" form:"username" query:"username"`
 	Password string `json:"password" form:"password" query:"password"`
-	UserID   int    `json:"user_id" form:"user_id" query:"user_id"`
 }
 
 type User struct {
-	ID       int    `json:"id"`
+	// ID       int    `json:"id"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 	Role     string `json:"role"`

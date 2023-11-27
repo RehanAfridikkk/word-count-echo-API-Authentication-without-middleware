@@ -10,9 +10,9 @@ import (
 )
 
 // GetUserByID retrieves a user by user ID.
-func GetUserByID(db *sql.DB, userID int) (*structure.User, error) {
+func GetUserByusername(db *sql.DB, username string) (*structure.User, error) {
 	var user structure.User
-	err := db.QueryRow("SELECT id, username, password, role FROM users WHERE id = $1", userID).Scan(&user.ID, &user.Username, &user.Password, &user.Role)
+	err := db.QueryRow("SELECT  username, password, role FROM users WHERE username = $1", username).Scan(&user.Username, &user.Password, &user.Role)
 	if err == sql.ErrNoRows {
 		// User not found
 		return nil, nil

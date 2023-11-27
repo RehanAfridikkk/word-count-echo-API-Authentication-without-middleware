@@ -38,7 +38,7 @@ func Signup(c echo.Context) error {
 	}
 
 	// Check if the user already exists based on user ID
-	existingUser, err := models.GetUserByID(db, user.ID)
+	existingUser, err := models.GetUserByusername(db, user.Username)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Error checking user existence")
 	}
@@ -54,7 +54,7 @@ func Signup(c echo.Context) error {
 
 	// Additional logic for admin signup
 	if user.Role == "admin" {
-		isAdminAllowed := checkAdminPermission(db, user.ID)
+		isAdminAllowed := checkAdminPermission(db, user.Username)
 		if !isAdminAllowed {
 			// You might want to roll back the signup or handle it accordingly
 			return echo.NewHTTPError(http.StatusUnauthorized, "Admin signup not allowed")
@@ -62,7 +62,7 @@ func Signup(c echo.Context) error {
 
 		// Perform additional tasks for admin signup
 		// For example, grant admin privileges or notify the owner for approval
-		adminSignupTasks(db, user.ID)
+		adminSignupTasks(db, user.Username)
 	}
 
 	// Do not include the password in the response
@@ -73,9 +73,7 @@ func Signup(c echo.Context) error {
 
 // validateUser performs basic validation on the user input
 func validateUser(user *structure.User) error {
-	if user.ID <= 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid user ID")
-	}
+
 	if user.Username == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "Username cannot be empty")
 	}
@@ -90,21 +88,21 @@ func validateUser(user *structure.User) error {
 }
 
 // adminSignupTasks performs additional tasks for admin signup.
-func adminSignupTasks(db *sql.DB, userID int) {
+func adminSignupTasks(db *sql.DB, username string) {
 	// Grant admin-specific privileges
 	// For example, update the user record to indicate admin privileges.
 
-	_, err := db.Exec("UPDATE users SET is_admin = true WHERE id = $1", userID)
+	_, err := db.Exec("UPDATE users SET is_admin = true WHERE username = $1", username)
 	if err != nil {
 		log.Println("Error granting admin privileges:", err)
 		return
 	}
 
-	log.Println("Admin privileges granted for user:", userID)
+	log.Println("Admin privileges granted for user:", username)
 }
 
 // checkAdminPermission checks if a user is allowed to sign up as an admin.
-func checkAdminPermission(db *sql.DB, userID int) bool {
+func checkAdminPermission(db *sql.DB, username string) bool {
 	// Implement your logic to check if the user is allowed to sign up as an admin.
 	// This could involve querying the database for specific criteria or permissions.
 
@@ -113,7 +111,7 @@ func checkAdminPermission(db *sql.DB, userID int) bool {
 
 	// Placeholder logic:
 	var role string
-	err := db.QueryRow("SELECT role FROM users WHERE id = $1", userID).Scan(&role)
+	err := db.QueryRow("SELECT role FROM users WHERE id = $1", username).Scan(&role)
 	if err == sql.ErrNoRows {
 		// No rows returned, meaning the user does not exist.
 		log.Println("User not found")
@@ -123,6 +121,6 @@ func checkAdminPermission(db *sql.DB, userID int) bool {
 		return false
 	}
 
-	// Check if the user has an "admin" role
+	// Check if the user has an "admin" roled
 	return role == "admin"
 }
