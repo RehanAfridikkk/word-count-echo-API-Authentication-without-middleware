@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -107,26 +108,67 @@ func Validate(tokenString string) (string, error) {
 }
 
 func queryStatistics(username, fileName string) (StatisticsResult, error) {
-
-	fmt.Println(username, fileName)
+	fmt.Println("Querying statistics for", username, fileName)
 	row := db.QueryRow(`
-	SELECT COUNT(*) AS execution_count, AVG(run_time) AS average_runtime FROM upload_requests WHERE username = $1 AND file_name = $2
-	`, username, fileName)
+        SELECT COUNT(*) AS execution_count, AVG(run_time) AS average_runtime
+        FROM upload_requests
+        WHERE username = $1 AND file_name = $2
+    `, username, fileName)
 
-	var executionCount big.Int
-	var averageRuntimeSeconds float64
+	var executionCount int64
+	var averageRuntimeStr string
 
-	err := row.Scan(&executionCount, &averageRuntimeSeconds)
+	err := row.Scan(&executionCount, &averageRuntimeStr)
 	if err != nil {
-
-		fmt.Println(StatisticsResult{})
+		fmt.Println("Error scanning row:", err)
 		return StatisticsResult{}, echo.NewHTTPError(http.StatusInternalServerError, "Failed to retrieve statistics from the database")
 	}
 
-	averageRuntime := time.Duration(int64(averageRuntimeSeconds)) * time.Second
+	fmt.Println("Retrieved average runtime string:", averageRuntimeStr)
 
+	averageRuntime, err := parseDuration(averageRuntimeStr)
+	if err != nil {
+		fmt.Println("Error parsing average runtime:", err)
+		return StatisticsResult{}, echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse average runtime from the database")
+	}
+
+	fmt.Println("Statistics retrieved successfully:", executionCount, averageRuntime)
 	return StatisticsResult{
-		ExecutionCount: executionCount,
+		ExecutionCount: *big.NewInt(executionCount),
 		AverageRuntime: JSONDuration{Duration: averageRuntime},
 	}, nil
+}
+
+func parseDuration(durationStr string) (time.Duration, error) {
+	components := strings.Split(durationStr, ":")
+	if len(components) != 3 {
+		return 0, fmt.Errorf("invalid duration format: %s", durationStr)
+	}
+
+	hours, err := strconv.Atoi(components[0])
+	if err != nil {
+		return 0, err
+	}
+
+	minutes, err := strconv.Atoi(components[1])
+	if err != nil {
+		return 0, err
+	}
+
+	secondsWithFraction := strings.Split(components[2], ".")
+	if len(secondsWithFraction) != 2 {
+		return 0, fmt.Errorf("invalid seconds format: %s", components[2])
+	}
+
+	seconds, err := strconv.Atoi(secondsWithFraction[0])
+	if err != nil {
+		return 0, err
+	}
+
+	fractions, err := strconv.Atoi(secondsWithFraction[1])
+	if err != nil {
+		return 0, err
+	}
+
+	return time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute + time.Duration(seconds)*time.Second + time.Duration(fractions)*time.Millisecond, nil
 }
