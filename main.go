@@ -6,6 +6,7 @@ import (
 	"github.com/RehanAfridikkk/API-Authentication/controller"
 	"github.com/RehanAfridikkk/API-Authentication/models"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
@@ -28,6 +29,11 @@ func main() {
 	controller.SetDB(db)
 
 	models.PingDB(db)
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
+	}))
 
 	e.Logger.Fatal(e.Start(":1303"))
 

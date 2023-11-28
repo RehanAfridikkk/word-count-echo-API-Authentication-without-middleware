@@ -24,9 +24,13 @@ func Admin_statistics(c echo.Context) error {
 
 	tokenString := tok[1]
 
-	_, err := ValidateAdmin(tokenString)
+	username, err := ValidateAdmin(tokenString)
 	if err != nil {
 		return handleTokenError(c, err)
+	}
+
+	if !username {
+		return c.JSON(http.StatusForbidden, echo.Map{"error": "You are not admin!"})
 	}
 
 	fileName := c.QueryParam("file")
@@ -43,7 +47,7 @@ func Admin_statistics(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
-		// "username":        username,
+		"username":        username,
 		"file_name":       fileName,
 		"execution_count": stats.ExecutionCount.String(), // Convert big.Int to string
 		"average_runtime": stats.AverageRuntime.String(),
