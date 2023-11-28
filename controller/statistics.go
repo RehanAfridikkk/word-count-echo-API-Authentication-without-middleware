@@ -87,26 +87,21 @@ func Validate(tokenString string) (string, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		fmt.Println("line87")
 		return hmacSampleSecret, nil
 	})
-	fmt.Println("line90")
 	if err != nil {
-		fmt.Println("line92")
 		return "", err
 
 	}
-	fmt.Println("line97")
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		user, ok := claims["name"].(string)
 		if !ok {
 			fmt.Println("line100")
 			return "", fmt.Errorf("user claim is not a float64")
 		}
-		fmt.Println("line103")
+
 		return user, nil
 	} else {
-		fmt.Println("line101")
 		return "", err
 	}
 }

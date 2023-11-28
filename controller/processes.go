@@ -6,18 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/RehanAfridikkk/API-Authentication/structure"
 	"github.com/labstack/echo/v4"
 )
-
-type UploadRequest struct {
-	ID               string `json:"ID"`
-	RunTime          string `json:"runtime"`
-	WordCount        int    `json:"wordCount"`
-	VowelsCount      int    `json:"vowelsCount"`
-	PunctuationCount int    `json:"punctuationCount"`
-	Routines         int    `json:"routines"`
-	LineCount        int    `json:"lineCount"`
-}
 
 func Processes(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization")
@@ -46,7 +37,7 @@ func Processes(c echo.Context) error {
 
 func QueryProcesses(username string) interface{} {
 	// Create a slice to store multiple instances of UploadRequest
-	var uploadRequests []UploadRequest
+	var uploadRequests []structure.UploadRequest
 
 	fmt.Println(username)
 	rows, err := db.Query(`
@@ -61,7 +52,7 @@ func QueryProcesses(username string) interface{} {
 
 	for rows.Next() {
 		// Create a new instance of the struct for each row
-		var uploadRequest UploadRequest
+		var uploadRequest structure.UploadRequest
 
 		if err := rows.Scan(&uploadRequest.ID, &uploadRequest.RunTime, &uploadRequest.WordCount, &uploadRequest.VowelsCount, &uploadRequest.PunctuationCount, &uploadRequest.Routines, &uploadRequest.LineCount); err != nil {
 			// Handle the scan error

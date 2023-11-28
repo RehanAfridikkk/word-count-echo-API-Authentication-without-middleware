@@ -42,3 +42,13 @@ type StatisticsResult struct {
 	ExecutionCount big.Int       `json:"execution_count"`
 	AverageRuntime time.Duration `json:"average_runtime"`
 }
+
+type UploadRequest struct {
+	ID               string `json:"ID"`
+	RunTime          string `json:"runtime"`
+	WordCount        int    `json:"wordCount"`
+	VowelsCount      int    `json:"vowelsCount"`
+	PunctuationCount int    `json:"punctuationCount"`
+	Routines         int    `json:"routines"`
+	LineCount        int    `json:"lineCount"`
+}

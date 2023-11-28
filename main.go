@@ -17,6 +17,7 @@ func main() {
 	e.POST("/signup", controller.Signup)
 	e.POST("/processes", controller.Processes)
 	e.GET("/statistics", controller.Statistics)
+	e.POST("/process_by_username", controller.Process_by_username)
 
 	db, err := models.OpenDB()
 	if err != nil {
