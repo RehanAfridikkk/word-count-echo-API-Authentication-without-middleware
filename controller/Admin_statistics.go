@@ -8,24 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
 
-type StatisticsResult struct {
-	ExecutionCount big.Int      `json:"execution_count"`
-	AverageRuntime JSONDuration `json:"average_runtime"`
-}
-
-type JSONDuration struct {
-	time.Duration
-}
-
-func (jd JSONDuration) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%s"`, jd.String())), nil
-}
-
-func Statistics(c echo.Context) error {
+func Admin_statistics(c echo.Context) error {
 	authHeader := c.Request().Header.Get("Authorization")
 	if authHeader == "" {
 		return c.JSON(http.StatusUnauthorized, echo.Map{"error": "Token is missing"})
@@ -38,7 +24,7 @@ func Statistics(c echo.Context) error {
 
 	tokenString := tok[1]
 
-	username, err := Validate(tokenString)
+	_, err := ValidateAdmin(tokenString)
 	if err != nil {
 		return handleTokenError(c, err)
 	}
@@ -51,69 +37,26 @@ func Statistics(c echo.Context) error {
 	}
 
 	// Query the database for statistics
-	stats, err := queryStatistics(username, fileName)
+	stats, err := queryStatisticsAdmin(fileName)
 	if err != nil {
 		return handleStatisticsError(c, err)
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
-		"username":        username,
+		// "username":        username,
 		"file_name":       fileName,
 		"execution_count": stats.ExecutionCount.String(), // Convert big.Int to string
 		"average_runtime": stats.AverageRuntime.String(),
 	})
 }
 
-func handleTokenError(c echo.Context, err error) error {
-	switch e := err.(type) {
-	case *echo.HTTPError:
-		return c.JSON(e.Code, echo.Map{"error": e.Message})
-	default:
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to extract username from token"})
-	}
-}
-
-func handleStatisticsError(c echo.Context, err error) error {
-	switch e := err.(type) {
-	case *echo.HTTPError:
-		return c.JSON(e.Code, echo.Map{"error": e.Message})
-	default:
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to retrieve statistics"})
-	}
-}
-
-func Validate(tokenString string) (string, error) {
-	hmacSampleSecret := []byte("secret")
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-		return hmacSampleSecret, nil
-	})
-	if err != nil {
-		return "", err
-
-	}
-	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		user, ok := claims["name"].(string)
-		if !ok {
-			fmt.Println("line100")
-			return "", fmt.Errorf("user claim is not a float64")
-		}
-
-		return user, nil
-	} else {
-		return "", err
-	}
-}
-
-func queryStatistics(username, fileName string) (StatisticsResult, error) {
-	fmt.Println("Querying statistics for", username, fileName)
+func queryStatisticsAdmin(fileName string) (StatisticsResult, error) {
+	fmt.Println("Querying statistics for", fileName)
 	row := db.QueryRow(`
         SELECT COUNT(*) AS execution_count, AVG(run_time) AS average_runtime
         FROM upload_requests
-        WHERE username = $1 AND file_name = $2
-    `, username, fileName)
+        WHERE file_name = $1
+    `, fileName)
 
 	var executionCount int64
 	var averageRuntimeStr string
@@ -126,7 +69,7 @@ func queryStatistics(username, fileName string) (StatisticsResult, error) {
 
 	fmt.Println("Retrieved average runtime string:", averageRuntimeStr)
 
-	averageRuntime, err := parseDuration(averageRuntimeStr)
+	averageRuntime, err := parseDurationAdmin(averageRuntimeStr)
 	if err != nil {
 		fmt.Println("Error parsing average runtime:", err)
 		return StatisticsResult{}, echo.NewHTTPError(http.StatusInternalServerError, "Failed to parse average runtime from the database")
@@ -138,7 +81,7 @@ func queryStatistics(username, fileName string) (StatisticsResult, error) {
 		AverageRuntime: JSONDuration{Duration: averageRuntime},
 	}, nil
 }
-func parseDuration(durationStr string) (time.Duration, error) {
+func parseDurationAdmin(durationStr string) (time.Duration, error) {
 	// Convert the string to a float64
 	durationInSeconds, err := strconv.ParseFloat(durationStr, 64)
 	if err != nil {

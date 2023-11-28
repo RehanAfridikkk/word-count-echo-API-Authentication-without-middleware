@@ -97,6 +97,6 @@ func storeUploadRequest(username, fileName string, routines int, totalCounts str
 
         INSERT INTO upload_requests (username, file_name, routines, line_count, words_count, vowels_count, punctuation_count, run_time)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-    `, username, fileName, routines, totalCounts.LineCount, totalCounts.WordsCount, totalCounts.VowelsCount, totalCounts.PunctuationCount, runTime)
+    `, username, fileName, routines, totalCounts.LineCount, totalCounts.WordsCount, totalCounts.VowelsCount, totalCounts.PunctuationCount, float64(runTime.Seconds()))
 	return err
 }

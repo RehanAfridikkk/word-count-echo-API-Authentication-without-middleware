@@ -52,3 +52,13 @@ type UploadRequest struct {
 	Routines         int    `json:"routines"`
 	LineCount        int    `json:"lineCount"`
 }
+
+type AdminStatisticsResult struct {
+	Username       string       `json:"username"`
+	ExecutionCount int64        `json:"execution_count"`
+	AverageRuntime JSONDuration `json:"average_runtime"`
+	FileName       string       `json:"file_name"`
+}
+type JSONDuration struct {
+	time.Duration
+}
