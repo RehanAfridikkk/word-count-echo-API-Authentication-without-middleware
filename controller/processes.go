@@ -11,6 +11,7 @@ import (
 )
 
 func Processes(c echo.Context) error {
+
 	authHeader := c.Request().Header.Get("Authorization")
 	if authHeader == "" {
 		return c.JSON(http.StatusUnauthorized, echo.Map{"error": "Token is missing"})
@@ -20,13 +21,13 @@ func Processes(c echo.Context) error {
 	if len(tok) != 2 {
 		return c.JSON(http.StatusUnauthorized, echo.Map{"error": "Invalid token format"})
 	}
-
 	tokenString := tok[1]
 
 	username, err := Validate(tokenString)
 	if err != nil {
 		return handleTokenError(c, err)
 	}
+
 	jsonResult := QueryProcesses(username)
 
 	return c.JSON(http.StatusOK, echo.Map{

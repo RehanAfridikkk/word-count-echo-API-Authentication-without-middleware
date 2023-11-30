@@ -13,13 +13,13 @@ func main() {
 	e := echo.New()
 
 	e.POST("/login", controller.Login)
-	e.GET("/", controller.Accessible)
 	e.POST("/upload", controller.Upload)
 	e.POST("/signup", controller.Signup)
-	e.POST("/processes", controller.Processes)
-	e.GET("/statistics", controller.Statistics)
-	e.POST("/process_by_username", controller.Process_by_username)
+	e.POST("/my/processes", controller.Processes)
+	e.GET("/my/statistics", controller.Statistics)
+	e.POST("/Admin/process_by_username", controller.Process_by_username)
 	e.GET("/Admin/statistics", controller.Admin_statistics)
+	e.POST("/refreshtoken", controller.RefreshToken)
 
 	db, err := models.OpenDB()
 	if err != nil {
