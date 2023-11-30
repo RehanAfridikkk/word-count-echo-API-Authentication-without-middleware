@@ -1,12 +1,76 @@
-openapi: 3.0.0
+openapi: 3.0.3
+
 info:
-  title: Your API
-  version: 1.0.0
+  version: "1.0.0"
+  title: "File Processor API"
+  description: "Word-Count is used to count the number of words, punctuations, lines and vowels in a text file. User can specify the file path and number of goroutines used for the calculations. Built in beego MVC framework, postgres and gorm."
+
+servers:
+  - url: "http://localhost:1303"  # Update the port to match your Go server port
+
 paths:
+  /signup:
+    post:
+        summary: "Create a new user"
+        tags:
+          - User
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                  password:
+                    type: string
+                  role:
+                    type: string
+
+        responses:
+          '201':
+            description: User created successfully
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    username:
+                      example: "rehan"
+                    password:
+                      example: ""
+                    role:
+                      example: "user"
+
+          '400':
+            description: code=400, message=Password must be at least 6 characters
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "code=400, message=Password must be at least 6 characters."
+
+          '409':
+            description: User with the given username already exists
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "User with the given username already exists."
+
+    
   /login:
     post:
-      summary: User Login
-      description: Endpoint to authenticate and obtain a JWT token.
+      summary: "Login a user"
+      tags:
+        - User
       requestBody:
         required: true
         content:
@@ -18,27 +82,475 @@ paths:
                   type: string
                 password:
                   type: string
+
       responses:
-        '200':
-          description: Successful login
+        "200":
+          description: Successful operation
           content:
             application/json:
               schema:
                 type: object
                 properties:
+                  message:
+                    type: string
+                    example: "User logged in successfully!"
                   token:
                     type: string
-                    description: JWT token for authentication
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDA5ODUwNTYsInJvbGUiOjAsInRpbWUiOjE3MDA5ODE0NTYsInVzZXIiOjB9.tfXrz-FBTO-NvA5XrxLF095cXDr0RdSh8aVHQA9j5gw"
+                  refresh_token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoidXNlcjAwIiwiYWRtaW4iOnRydWUsImV4cCI6MTcwMTkzMDc0MH0._8SOs_lBwAKxEdoTaDfiArEAyNm7Dzii-wFGla7epTA"
+
+        "400":
+          description: Username or password field empty
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Username and password are required"
+
+        "401":
+          description: Username or password incorrect
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Invalid credentials. Please check your username and password."
+
+  /refreshtoken:
+    post:
+      summary: Refresh Access Token
+      description: |
+        Refreshes the access token using a valid refresh token.
+      operationId: refreshAccessToken
+      security:
+        - jwt_auth: []
+      # requestBody:
+      #   description: Refresh Token
+      #   required: true
+      #   content:
+      #     application/json:
+      #       schema:
+      #         type: object
+      #         properties:
+      #           refresh_token:
+      #             type: string
+      #             description: The refresh token.
+      #             example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoidXNlcjAwIiwiYWRtaW4iOnRydWUsImV4cCI6MTcwMTQyMjE2OH0.3va1gX2YTOoISx87e0wE5UF3mruotlnELRRQopkaY2o"
+
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              example:
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoidXNlcjAwIiwiYWRtaW4iOnRydWUsImV4cCI6MTcwMTQyMjE2OH0.3va1gX2YTOoISx87e0wE5UF3mruotlnELRRQopkaY2o"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              example:
+                message: "Refresh token is required"
         '401':
           description: Unauthorized
           content:
             application/json:
+              example:
+                message: "Invalid refresh token"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              example:
+                message: "Error generating new token"
+
+  /upload:
+    post:
+      security:
+        - jwt_auth: []
+      summary: "Upload a file to process"
+      tags:
+        - Process
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                routines:
+                  type: integer
+
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
               schema:
                 type: object
                 properties:
-                  error:
+                  LineCount:
+                    type: integer
+                    example: 101
+                  punctuationCount:
+                    type: integer
+                    example: 280
+                  runTime:
+                    type: integer
+                    example: 231.956µs
+                  vowelsCount:
+                    type: integer
+                    example: 637
+                  wordsCount:
+                    type: integer
+                    example: 637
+
+        "400":
+          description: No file uploaded
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "No file uploaded"
+        "401":
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Invalid or expired token."
+
+        "422":
+          description: Invalid routines field
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Routines field is invalid"
+
+  /my/statistics:
+    post:
+      security:
+        - jwt_auth: []
+      summary: Find statistics for a file
+      tags:
+        - Process
+      parameters:
+        - in: query
+          name: file
+          schema:
+            type: string
+          required: true
+          description: The name of the file for which statistics are requested
+ 
+       
+          
+
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  average_runtime:
+                    type: "string"
+                    example: "48.412µs."
+                  execution_count:
+                    type: "integer"
+                    example: "12"
+                  file:
+                    type: "string"
+                    example: "newFile2.txt"
+                  username:
+                    type: "string"
+                    example: "rehan"
+                
+
+        "401":
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Invalid or expired token."
+
+        "404":
+          description: No result found
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "no processes found for the specified file and user"
+
+  /my/processes:
+    post:
+      security:
+        - jwt_auth: []
+      summary: "Find processes for a user"
+      tags:
+        - Process
+      
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  result:
+                    type: "object" 
+                    properties:
+                      ID:
+                        type: "integer"
+                        example: "17"
+                      runtime:
+                        type: "integer"
+                        example: "4.9093e-05"
+                      wordsCount:
+                        type: "integer"
+                        example: "11"  
+                      vowelsCount:
+                        type: "integer"
+                        example: "10"                               
+                      punctuationCount:
+                        type: "integer"
+                        example: "11" 
+                      routines:
+                        type: "integer"
+                        example: "4" 
+                      LineCount:
+                        type: "integer"
+                        example: "4"                                         
+                
+                
+        "401":
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "Invalid or expired token."
+                
+        "404":
+          description: No result found
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "no processes found for the specified user"
+
+  /admin/login:
+    post:
+     
+      summary: "Login an admin user"
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
                     type: string
-                    description: Error message
-                  description:
+                    example: "User logged in successfully!"
+                  token:
                     type: string
-                    description: Details about the error
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDA5ODUwNTYsInJvbGUiOjAsInRpbWUiOjE3MDA5ODE0NTYsInVzZXIiOjB9.tfXrz-FBTO-NvA5XrxLF095cXDr0RdSh8aVHQA9j5gw"
+                  refresh_token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoidXNlcjAwIiwiYWRtaW4iOnRydWUsImV4cCI6MTcwMTkzMDc0MH0._8SOs_lBwAKxEdoTaDfiArEAyNm7Dzii-wFGla7epTA"
+
+        '400':
+          description: Username or password field empty
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Username and password are required"
+
+        '401':
+          description: Username or password incorrect
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid credentials. Please check your username and password."
+
+  /Admin/process_by_username:
+    post:
+      summary: Find processes for all users
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The username for which processes are requested
+                  example: user123
+      security:
+        - jwt_auth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: object
+                    properties:
+                      ID:
+                        type: integer
+                        example: 17
+                      runtime:
+                        type: number
+                        example: 4.9093e-05
+                      wordsCount:
+                        type: integer
+                        example: 11
+                      vowelsCount:
+                        type: integer
+                        example: 10
+                      punctuationCount:
+                        type: integer
+                        example: 11
+                      routines:
+                        type: integer
+                        example: 4
+                      LineCount:
+                        type: integer
+                        example: 4
+        '401':
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid or expired token.
+        '404':
+          description: No result found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: no processes found
+
+  /Admin/statistics:
+    get:
+      security:
+        - jwt_auth: []
+      summary: "Find statistics for a file"
+      tags:
+        - Admin
+      parameters:
+          - in: query
+            name: file
+            schema:
+              type: string
+            required: true
+            description: The name of the file for which statistics are requested
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  average_runtime:
+                    type: "string"
+                    example: "48.412µs."
+                  execution_count:
+                    type: "integer"
+                    example: "12"
+                  file_name:
+                    type: "string"
+                    example: "newFile2.txt"
+                  username:
+                    type: "string"
+                    example: "rehan"
+                
+components:
+  securitySchemes:
+    jwt_auth:
+      type: apiKey
+      in: header
+      name: Authorization
+
+  schemas:
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+
