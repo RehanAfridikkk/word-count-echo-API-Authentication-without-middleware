@@ -92,8 +92,6 @@ func Login(c echo.Context) error {
 	})
 }
 
-// RefreshToken handles the token refresh request.
-
 // comparePasswords compares the provided password with the hashed password.
 func comparePasswords(providedPassword, hashedPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(providedPassword))
