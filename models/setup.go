@@ -21,7 +21,7 @@ func OpenDB() (*sql.DB, error) {
 	dbName := os.Getenv("DB_NAME")
 	dbPassword := os.Getenv("DB_PASSWORD")
 
-	connStr := fmt.Sprintf("user=%s dbname=%s password=%s sslmode=disable", dbUser, dbName, dbPassword)
+	connStr := fmt.Sprintf("user=%s dbname=%s password=%s sslmode=disable host=postgres-database", dbUser, dbName, dbPassword)
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)

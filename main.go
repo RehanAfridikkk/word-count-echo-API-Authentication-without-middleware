@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/RehanAfridikkk/API-Authentication/controller"
 	"github.com/RehanAfridikkk/API-Authentication/models"
@@ -31,6 +32,7 @@ func main() {
 	e.POST("/admin/login", controller.Login)
 
 	// Database setup
+	time.Sleep(20)
 	db, err := models.OpenDB()
 	if err != nil {
 		log.Fatal(err)
