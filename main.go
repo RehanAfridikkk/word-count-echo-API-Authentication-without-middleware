@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"time"
 
 	"github.com/RehanAfridikkk/API-Authentication/controller"
 	"github.com/RehanAfridikkk/API-Authentication/models"
@@ -18,6 +17,8 @@ func main() {
 	e.POST("/login", controller.Login)
 	e.POST("/upload", controller.Upload)
 
+	e.POST("/uploadlargefile", controller.UploadLargeFile)
+
 	// Protected routes (require JWT authentication)
 	e.POST("/my/processes", controller.Processes, middleware.JWT([]byte("secret")))
 	e.POST("/my/statistics", controller.Statistics, middleware.JWT([]byte("secret")))
@@ -32,7 +33,7 @@ func main() {
 	e.POST("/admin/login", controller.Login)
 
 	// Database setup
-	time.Sleep(20)
+	// time.Sleep(20)
 	db, err := models.OpenDB()
 	if err != nil {
 		log.Fatal(err)
